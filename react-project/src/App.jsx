@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from "react";
 import "./App.scss";
 
@@ -12,15 +13,77 @@ function App() {
     phoneNumber: "",
     city: "",
   });
-  const [users, setUsers] = useState([]);
+  const [editableUser, setEditableUser] = useState({
+    id: "",
+    firstName: "",
+    lastName: "",
+    avatar: "",
+    phoneNumber: "",
+    city: "",
+  });
+  const [users, setUsers] = useState([
+    {
+      id: 1,
+      firstName: "Guram",
+      lastName: "Kirtadze",
+      avatar:
+        "https://sm.ign.com/ign_nordic/cover/a/avatar-gen/avatar-generations_prsz.jpg",
+      phoneNumber: "0123456789",
+      city: "Wyaltubo",
+    },
+  ]);
 
-  const handleValues = (target) =>
+  const handleValues = (event) =>
     setUser((prev) => {
-      return { ...prev, [target.name]: target.value };
+      return { ...prev, [event.target.name]: event.target.value };
     });
 
+  const handlEditValues = (event) => {
+    setEditableUser((prev) => {
+      return { ...prev, [event.target.name]: event.target.value };
+    });
+  };
+
+  const handleUpdateUser = () => {
+    const indexOfEditUser = users.findIndex(
+      (user) => user.id === editableUser.id
+    );
+    const updatedUsers = [...users];
+    updatedUsers.splice(indexOfEditUser, 1, editableUser);
+    // updatedUsers[indexOfeEditUser] = editableUser;
+    setUsers(updatedUsers);
+    setEditableUser({
+      id: "",
+      firstName: "",
+      lastName: "",
+      avatar: "",
+      phoneNumber: "",
+      city: "",
+    });
+  };
+
+  const handleEditUser = (user) => {
+    setEditableUser((prev) => {
+      if (prev.id === user.id) {
+        return {
+          id: "",
+          firstName: "",
+          lastName: "",
+          avatar: "",
+          phoneNumber: "",
+          city: "",
+        };
+      }
+      return user;
+    });
+  };
+
   const handleAddUser = (user) => {
-    setUsers((prev) => [...prev, user]);
+    const newUser = {
+      ...user,
+      id: Math.floor(Math.random() * 1000),
+    };
+    setUsers((prev) => [...prev, newUser]);
     setUser({
       firstName: "",
       lastName: "",
@@ -29,6 +92,47 @@ function App() {
       city: "",
     });
   };
+
+  const renderEditableUser = (user) => (
+    <div className="card" key={user.id}>
+      <div className="card-header">
+        <img src={editableUser.avatar} width="50px" height="100px" />
+        <span>
+          {/* <strong>{user.firstName} </strong> 
+          <strong> {user.lastName} </strong> */}
+          <input
+            value={editableUser.firstName}
+            name="firstName"
+            onChange={handlEditValues}
+          />
+          <input
+            value={editableUser.lastName}
+            name="lastName"
+            onChange={handlEditValues}
+          />
+        </span>
+      </div>
+      <div className="card-info">
+        <span>
+          Phone number:{" "}
+          <input
+            value={editableUser.phoneNumber}
+            name="phoneNumber"
+            onChange={handlEditValues}
+          />
+        </span>
+        <span>
+          City:{" "}
+          <input
+            value={editableUser.city}
+            name="city"
+            onChange={handlEditValues}
+          />
+        </span>
+      </div>
+      <button onClick={handleUpdateUser}>Update User</button>
+    </div>
+  );
 
   return (
     <>
@@ -39,7 +143,7 @@ function App() {
             name="avatar"
             placeholder="...Photo"
             value={user.avatar}
-            onChange={(event) => handleValues(event.target)}
+            onChange={handleValues}
           />
         </div>
         <div className="input-container">
@@ -48,7 +152,7 @@ function App() {
             placeholder="...John"
             name="firstName"
             value={user.firstName}
-            onChange={(e) => handleValues(e.target)}
+            onChange={handleValues}
           />
         </div>
         <div className="input-container">
@@ -57,7 +161,7 @@ function App() {
             placeholder="...Doe"
             name="lastName"
             value={user.lastName}
-            onChange={(e) => handleValues(e.target)}
+            onChange={handleValues}
           />
         </div>
         <div className="input-container">
@@ -66,7 +170,7 @@ function App() {
             placeholder="+995 555 123 456"
             name="phoneNumber"
             value={user.phoneNumber}
-            onChange={(e) => handleValues(e.target)}
+            onChange={handleValues}
           />
         </div>
         <div className="input-container">
@@ -75,31 +179,37 @@ function App() {
             placeholder="...Tbilisi"
             name="city"
             value={user.city}
-            onChange={(e) => handleValues(e.target)}
+            onChange={handleValues}
           />
         </div>
         <button onClick={() => handleAddUser(user)}>Add user</button>
       </div>
       <div className="flex-wrap">
-        {users.map((user) => (
-          <div className="card">
-            <div className="card-header">
-              <img src={user.avatar} width="50px" height="100px" />
-              <p>
-                <strong>{user.firstName} </strong>{" "}
-                <strong> {user.lastName} </strong>
-              </p>
+        {users.map((user) => {
+          if (editableUser.id === user.id) {
+            return renderEditableUser(user);
+          }
+          return (
+            <div className="card" key={user.id}>
+              <div className="card-header">
+                <img src={user.avatar} width="50px" height="100px" />
+                <p>
+                  <strong>{user.firstName} </strong>{" "}
+                  <strong> {user.lastName} </strong>
+                </p>
+              </div>
+              <div className="card-info">
+                <p>
+                  Phone number: <strong>{user.phoneNumber}</strong>
+                </p>
+                <p>
+                  City: <strong> {user.city} </strong>
+                </p>
+              </div>
+              <button onClick={() => handleEditUser(user)}>Edit User</button>
             </div>
-            <div className="card-info">
-              <p>
-                Phone number: <strong>{user.phoneNumber}</strong>
-              </p>
-              <p>
-                City: <strong> {user.city} </strong>
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </>
   );
