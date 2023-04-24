@@ -21,17 +21,7 @@ function App() {
     phoneNumber: "",
     city: "",
   });
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      firstName: "Guram",
-      lastName: "Kirtadze",
-      avatar:
-        "https://sm.ign.com/ign_nordic/cover/a/avatar-gen/avatar-generations_prsz.jpg",
-      phoneNumber: "0123456789",
-      city: "Wyaltubo",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
 
   const handleValues = (event) =>
     setUser((prev) => {
