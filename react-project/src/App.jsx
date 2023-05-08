@@ -1,20 +1,13 @@
 // @ts-nocheck
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.scss";
+import CardItem from "./components/Card";
 
 function App() {
   // const [avatar, setAvatar] = useState("");
   // const [firstName, setFirstName] = useState("");
   // const [lastName, setLastName] = useState("");
   const [user, setUser] = useState({
-    firstName: "",
-    lastName: "",
-    avatar: "",
-    phoneNumber: "",
-    city: "",
-  });
-  const [editableUser, setEditableUser] = useState({
-    id: "",
     firstName: "",
     lastName: "",
     avatar: "",
@@ -28,44 +21,23 @@ function App() {
       return { ...prev, [event.target.name]: event.target.value };
     });
 
-  const handlEditValues = (event) => {
-    setEditableUser((prev) => {
-      return { ...prev, [event.target.name]: event.target.value };
-    });
-  };
-
-  const handleUpdateUser = () => {
-    const indexOfEditUser = users.findIndex(
-      (user) => user.id === editableUser.id
+  const handleUpdateUser = (editedUser) => {
+    const indexOfEditedUser = users.findIndex(
+      (user) => user.id === editedUser.id
     );
     const updatedUsers = [...users];
-    updatedUsers.splice(indexOfEditUser, 1, editableUser);
+    updatedUsers.splice(indexOfEditedUser, 1, editedUser);
     // updatedUsers[indexOfeEditUser] = editableUser;
     setUsers(updatedUsers);
-    setEditableUser({
-      id: "",
-      firstName: "",
-      lastName: "",
-      avatar: "",
-      phoneNumber: "",
-      city: "",
-    });
-  };
-
-  const handleEditUser = (user) => {
-    setEditableUser((prev) => {
-      if (prev.id === user.id) {
-        return {
-          id: "",
-          firstName: "",
-          lastName: "",
-          avatar: "",
-          phoneNumber: "",
-          city: "",
-        };
-      }
-      return user;
-    });
+    fetch(`https://dummyjson.com/users/${editedUser.id}`, {
+      method: "PUT" /* or PATCH */,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...editedUser,
+      }),
+    })
+      .then((res) => res.json())
+      .then(console.log);
   };
 
   const handleAddUser = (user) => {
@@ -74,55 +46,26 @@ function App() {
       id: Math.floor(Math.random() * 1000),
     };
     setUsers((prev) => [...prev, newUser]);
-    setUser({
-      firstName: "",
-      lastName: "",
-      avatar: "",
-      phoneNumber: "",
-      city: "",
-    });
   };
 
-  const renderEditableUser = (user) => (
-    <div className="card" key={user.id}>
-      <div className="card-header">
-        <img src={editableUser.avatar} width="50px" height="100px" />
-        <span>
-          {/* <strong>{user.firstName} </strong> 
-          <strong> {user.lastName} </strong> */}
-          <input
-            value={editableUser.firstName}
-            name="firstName"
-            onChange={handlEditValues}
-          />
-          <input
-            value={editableUser.lastName}
-            name="lastName"
-            onChange={handlEditValues}
-          />
-        </span>
-      </div>
-      <div className="card-info">
-        <span>
-          Phone number:{" "}
-          <input
-            value={editableUser.phoneNumber}
-            name="phoneNumber"
-            onChange={handlEditValues}
-          />
-        </span>
-        <span>
-          City:{" "}
-          <input
-            value={editableUser.city}
-            name="city"
-            onChange={handlEditValues}
-          />
-        </span>
-      </div>
-      <button onClick={handleUpdateUser}>Update User</button>
-    </div>
-  );
+  const handleDeleteUser = (userId) => {
+    const updatedUsers = [...users].filter((user) => user.id !== userId);
+    setUsers(updatedUsers);
+    fetch(`https://dummyjson.com/users/${userId}`, {
+      method: "DELETE",
+    })
+      .then((res) => res.json())
+      .then(console.log);
+  };
+
+  useEffect(() => {
+    fetch("https://dummyjson.com/users", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => res.json())
+      .then((data) => setUsers(data.users));
+  }, []);
 
   return (
     <>
@@ -159,7 +102,7 @@ function App() {
           <input
             placeholder="+995 555 123 456"
             name="phoneNumber"
-            value={user.phoneNumber}
+            value={user.phone}
             onChange={handleValues}
           />
         </div>
@@ -168,7 +111,7 @@ function App() {
           <input
             placeholder="...Tbilisi"
             name="city"
-            value={user.city}
+            value={user?.address?.city}
             onChange={handleValues}
           />
         </div>
@@ -176,28 +119,16 @@ function App() {
       </div>
       <div className="flex-wrap">
         {users.map((user) => {
-          if (editableUser.id === user.id) {
-            return renderEditableUser(user);
-          }
+          // if (editableUser.id === user.id) {
+          //   return renderEditableUser(user);
+          // }
           return (
-            <div className="card" key={user.id}>
-              <div className="card-header">
-                <img src={user.avatar} width="50px" height="100px" />
-                <p>
-                  <strong>{user.firstName} </strong>{" "}
-                  <strong> {user.lastName} </strong>
-                </p>
-              </div>
-              <div className="card-info">
-                <p>
-                  Phone number: <strong>{user.phoneNumber}</strong>
-                </p>
-                <p>
-                  City: <strong> {user.city} </strong>
-                </p>
-              </div>
-              <button onClick={() => handleEditUser(user)}>Edit User</button>
-            </div>
+            <CardItem
+              key={user.id}
+              user={user}
+              handleDeleteUser={handleDeleteUser}
+              onUpdateUser={handleUpdateUser}
+            />
           );
         })}
       </div>
