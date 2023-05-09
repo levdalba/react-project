@@ -1,5 +1,7 @@
-import { useState } from "react";
+// @ts-nocheck
+import { useState, useEffect } from "react";
 import "./App.scss";
+import CardItem from "./components/Card";
 
 function App() {
   // const [avatar, setAvatar] = useState("");
@@ -14,21 +16,56 @@ function App() {
   });
   const [users, setUsers] = useState([]);
 
-  const handleValues = (target) =>
+  const handleValues = (event) =>
     setUser((prev) => {
-      return { ...prev, [target.name]: target.value };
+      return { ...prev, [event.target.name]: event.target.value };
     });
 
-  const handleAddUser = (user) => {
-    setUsers((prev) => [...prev, user]);
-    setUser({
-      firstName: "",
-      lastName: "",
-      avatar: "",
-      phoneNumber: "",
-      city: "",
-    });
+  const handleUpdateUser = (editedUser) => {
+    const indexOfEditedUser = users.findIndex(
+      (user) => user.id === editedUser.id
+    );
+    const updatedUsers = [...users];
+    updatedUsers.splice(indexOfEditedUser, 1, editedUser);
+    // updatedUsers[indexOfeEditUser] = editableUser;
+    setUsers(updatedUsers);
+    fetch(`https://dummyjson.com/users/${editedUser.id}`, {
+      method: "PUT" /* or PATCH */,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...editedUser,
+      }),
+    })
+      .then((res) => res.json())
+      .then(console.log);
   };
+
+  const handleAddUser = (user) => {
+    const newUser = {
+      ...user,
+      id: Math.floor(Math.random() * 1000),
+    };
+    setUsers((prev) => [...prev, newUser]);
+  };
+
+  const handleDeleteUser = (userId) => {
+    const updatedUsers = [...users].filter((user) => user.id !== userId);
+    setUsers(updatedUsers);
+    fetch(`https://dummyjson.com/users/${userId}`, {
+      method: "DELETE",
+    })
+      .then((res) => res.json())
+      .then(console.log);
+  };
+
+  useEffect(() => {
+    fetch("https://dummyjson.com/users", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => res.json())
+      .then((data) => setUsers(data.users));
+  }, []);
 
   return (
     <>
@@ -39,7 +76,7 @@ function App() {
             name="avatar"
             placeholder="...Photo"
             value={user.avatar}
-            onChange={(event) => handleValues(event.target)}
+            onChange={handleValues}
           />
         </div>
         <div className="input-container">
@@ -48,7 +85,7 @@ function App() {
             placeholder="...John"
             name="firstName"
             value={user.firstName}
-            onChange={(e) => handleValues(e.target)}
+            onChange={handleValues}
           />
         </div>
         <div className="input-container">
@@ -57,7 +94,7 @@ function App() {
             placeholder="...Doe"
             name="lastName"
             value={user.lastName}
-            onChange={(e) => handleValues(e.target)}
+            onChange={handleValues}
           />
         </div>
         <div className="input-container">
@@ -65,8 +102,8 @@ function App() {
           <input
             placeholder="+995 555 123 456"
             name="phoneNumber"
-            value={user.phoneNumber}
-            onChange={(e) => handleValues(e.target)}
+            value={user.phone}
+            onChange={handleValues}
           />
         </div>
         <div className="input-container">
@@ -74,32 +111,26 @@ function App() {
           <input
             placeholder="...Tbilisi"
             name="city"
-            value={user.city}
-            onChange={(e) => handleValues(e.target)}
+            value={user?.address?.city}
+            onChange={handleValues}
           />
         </div>
         <button onClick={() => handleAddUser(user)}>Add user</button>
       </div>
       <div className="flex-wrap">
-        {users.map((user) => (
-          <div className="card">
-            <div className="card-header">
-              <img src={user.avatar} width="50px" height="100px" />
-              <p>
-                <strong>{user.firstName} </strong>{" "}
-                <strong> {user.lastName} </strong>
-              </p>
-            </div>
-            <div className="card-info">
-              <p>
-                Phone number: <strong>{user.phoneNumber}</strong>
-              </p>
-              <p>
-                City: <strong> {user.city} </strong>
-              </p>
-            </div>
-          </div>
-        ))}
+        {users.map((user) => {
+          // if (editableUser.id === user.id) {
+          //   return renderEditableUser(user);
+          // }
+          return (
+            <CardItem
+              key={user.id}
+              user={user}
+              handleDeleteUser={handleDeleteUser}
+              onUpdateUser={handleUpdateUser}
+            />
+          );
+        })}
       </div>
     </>
   );
