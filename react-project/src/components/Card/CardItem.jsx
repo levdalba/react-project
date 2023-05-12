@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import "./CardItem.scss";
 
 const CardItem = ({ user, handleDeleteUser, onUpdateUser }) => {
@@ -95,9 +96,11 @@ const CardItem = ({ user, handleDeleteUser, onUpdateUser }) => {
       <div className="card-header">
         <img src={user.image} width="50px" height="100px" />
         <p>
-          <strong>
-            {user.firstName} {user.lastName}{" "}
-          </strong>{" "}
+          <Link to={`user/${user.id}`}>
+            <strong>
+              {user.firstName} {user.lastName}{" "}
+            </strong>{" "}
+          </Link>
         </p>
         <p
           style={{ color: "red", cursor: "pointer", marginLeft: 2 }}
